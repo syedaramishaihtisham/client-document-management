@@ -233,9 +233,6 @@ Incomplete
 
 ![Gmail Trigger](screenshots/gmail_trigger.png)
 
-### 2. Received Client Email
-
-![Received Email](screenshots/received_email.png)
 
 ### 3. Code Node
 
