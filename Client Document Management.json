@@ -1,0 +1,734 @@
+{
+  "name": "Client Document Management",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {
+          "downloadAttachments": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        0,
+        0
+      ],
+      "id": "34358ada-ba10-4f48-a16a-95de21aa2062",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "meZd5qj9XNc1XpLh",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        176,
+        0
+      ],
+      "id": "36300d58-7a77-43c9-898d-e1b42e282bf5",
+      "name": "Get a message",
+      "webhookId": "09357973-630c-41f6-b74f-b9756106dc99",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "meZd5qj9XNc1XpLh",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "060927ad-ffe4-45ea-89e4-fb959ec1f555",
+              "name": "client_name",
+              "value": "={{$json.snippet.match(/Client Name:\\s*(.*?)(?=\\s*Contact Person:)/)?.[1]}}",
+              "type": "string"
+            },
+            {
+              "id": "0c262ce2-e744-48e3-8304-d405e0768e7c",
+              "name": "contact_person",
+              "value": "={{$json.snippet.match(/Contact Person:\\s*(.*?)(?=\\s*Email:)/)?.[1]}}",
+              "type": "string"
+            },
+            {
+              "id": "1b13d875-b2ad-4cfa-a4fb-c16f76c03719",
+              "name": "client_email",
+              "value": "={{$json.snippet.match(/Email:\\s*(.*?)(?=\\s*Project:)/)?.[1]}}",
+              "type": "string"
+            },
+            {
+              "id": "22051321-d26d-4409-bf3b-5d06555e216b",
+              "name": "project",
+              "value": "={{$json.snippet.match(/Project:\\s*(.*)/)?.[1]}}",
+              "type": "string"
+            },
+            {
+              "id": "8632f45b-5c83-48dd-b1de-04302eb785dc",
+              "name": "email_subject",
+              "value": "={{$json.Subject}}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        336,
+        0
+      ],
+      "id": "43e9c53e-d73f-42e0-8025-ea5d7ebab2ed",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        528,
+        -16
+      ],
+      "id": "b6348696-6305-4ab0-abfe-f6248c3a51d1",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "5aca158f-ed27-4e97-8fe3-c0e721107439",
+              "leftValue": "={{ \n  !!$json.client_name &&\n  !!$json.contact_person &&\n  !!$json.client_email &&\n  !!$json.project &&\n  Object.values($binary || {}).some(f => f.fileName?.toLowerCase().includes('company_registration_certificate')) &&\n  Object.values($binary || {}).some(f => f.fileName?.toLowerCase().includes('tax_certificate')) &&\n  Object.values($binary || {}).some(f => f.fileName?.toLowerCase().includes('signed_service_agreement'))\n}}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        688,
+        -16
+      ],
+      "id": "cfd69c32-ca46-4ee3-9679-ab475edb91d3",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "resource": "folder",
+        "name": "={{ $json.client_name }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "18I5bQkcsFmwZGe2-MJWK-CU_jwH2TNtH",
+          "mode": "list",
+          "cachedResultName": "Client Document Management",
+          "cachedResultUrl": "https://drive.google.com/drive/folders/18I5bQkcsFmwZGe2-MJWK-CU_jwH2TNtH"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        880,
+        -128
+      ],
+      "id": "2af47d90-fc8a-4737-907c-2924a766b852",
+      "name": "Create folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3NT0XnDnrPDofjd3",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst binary = item.binary || {};\n\nconst output = [];\n\nfor (const [key, file] of Object.entries(binary)) {\n  output.push({\n    json: {\n      ...item.json,\n      binaryField: key,\n      fileName: file.fileName,\n      mimeType: file.mimeType,\n    },\n    binary: {\n      data: file\n    }\n  });\n}\n\nreturn output;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1056,
+        -128
+      ],
+      "id": "6bf53f3d-5e2c-45d8-b851-0e6276e9255c",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "name": "={{ $json.fileName }}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "={{ $('Create folder').first().json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1232,
+        -128
+      ],
+      "id": "71f56fa0-135c-4767-86bd-3005216591a1",
+      "name": "Upload file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "3NT0XnDnrPDofjd3",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Qjsn3QoVIwfJhvv7fSOtDUpzjku7pmMOcCcgSQPG9_4",
+          "mode": "list",
+          "cachedResultName": "Client Document Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Qjsn3QoVIwfJhvv7fSOtDUpzjku7pmMOcCcgSQPG9_4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Qjsn3QoVIwfJhvv7fSOtDUpzjku7pmMOcCcgSQPG9_4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Client Name": "={{ $('Merge').item.json.client_name }}",
+            "Received Documents": "={{ Object.values($('Merge').first().binary || {}).map(f => f.fileName).join(', ') }}",
+            "Contact Person": "={{ $('Merge').item.json.contact_person }}",
+            "Email": "={{ $('Merge').item.json.client_email }}",
+            "Project": "={{ $('Merge').item.json.project }}",
+            "Missing Documents": "none",
+            "Status": "complete",
+            "Received Date": "={{ $('Merge').item.json.headers.date.toDateTime().format('yyyy-MM-dd')}}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Client Name",
+              "displayName": "Client Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contact Person",
+              "displayName": "Contact Person",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Project",
+              "displayName": "Project",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Received Documents",
+              "displayName": "Received Documents",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing Documents",
+              "displayName": "Missing Documents",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Received Date",
+              "displayName": "Received Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1424,
+        -128
+      ],
+      "id": "a1174117-99ed-4d53-9c85-1445b0ea7b68",
+      "name": "Append row in sheet",
+      "executeOnce": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3iPmu8KBu3h1cEVZ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "mishaihtisham22@gmail.com",
+        "subject": "=Client Documents Complete - {{ $json['Client Name'] }}",
+        "emailType": "text",
+        "message": "=Hello Operations Team,  All required documents have been received for the following client:  Client: {{ $json['Client Name'] }} Contact Person:{{ $json['Contact Person'] }} Email: {{ $json.Email }} Project: {{ $json.Project }}  Documents Received: {{ Object.values($('Merge').first().binary || {}).map(f => f.fileName).join('\\n') }}  Status: Complete  The documents have been uploaded to the client's Google Drive folder.  Regards, Client Document Management Automation",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1616,
+        -128
+      ],
+      "id": "d468d6c6-d56b-4415-94cd-e0b651a338f9",
+      "name": "Send a message",
+      "webhookId": "ff366435-be6f-4231-9316-9dce0fa5a835",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "meZd5qj9XNc1XpLh",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const item = $input.first();\nconst data = item.json || {};\nconst binary = item.binary || {};\n\nconst files = Object.values(binary).map(file =>\n  (file.fileName || '').toLowerCase()\n);\n\nconst receivedDocuments = [];\nconst missingDocuments = [];\n\n// Required documents\nconst requiredDocuments = [\n  {\n    key: 'company_registration_certificate',\n    name: 'Company Registration Certificate'\n  },\n  {\n    key: 'tax_certificate',\n    name: 'Tax Certificate'\n  },\n  {\n    key: 'signed_service_agreement',\n    name: 'Signed Service Agreement'\n  }\n];\n\n// Check received and missing documents\nfor (const document of requiredDocuments) {\n  if (files.some(file => file.includes(document.key))) {\n    receivedDocuments.push(document.name);\n  } else {\n    missingDocuments.push(document.name);\n  }\n}\n\n// Check client information\nconst missingInformation = [];\n\nif (!data.client_name) missingInformation.push('Client Name');\nif (!data.contact_person) missingInformation.push('Contact Person');\nif (!data.client_email) missingInformation.push('Client Email');\nif (!data.project) missingInformation.push('Project');\n\nreturn [{\n  json: {\n    ...data,\n\n    received_documents:\n      receivedDocuments.length\n        ? receivedDocuments.join(', ')\n        : 'None',\n\n    missing_documents:\n      missingDocuments.length\n        ? missingDocuments.join(', ')\n        : 'None',\n\n    missing_information:\n      missingInformation.length\n        ? missingInformation.join(', ')\n        : 'None',\n\n    status: 'Incomplete'\n  },\n\n  binary\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        80
+      ],
+      "id": "6c73f2ab-7b25-4890-a082-0f636c957869",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Qjsn3QoVIwfJhvv7fSOtDUpzjku7pmMOcCcgSQPG9_4",
+          "mode": "list",
+          "cachedResultName": "Client Document Tracker",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Qjsn3QoVIwfJhvv7fSOtDUpzjku7pmMOcCcgSQPG9_4/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Qjsn3QoVIwfJhvv7fSOtDUpzjku7pmMOcCcgSQPG9_4/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Client Name": "={{ $json.client_name }}",
+            "Contact Person": "={{ $json.contact_person }}",
+            "Email": "={{ $json.client_email }}",
+            "Project": "={{ $json.project }}",
+            "Received Documents": "={{ $json.received_documents }}",
+            "Missing Documents": "={{ $json.missing_documents }} , {{ $json.missing_information }}",
+            "Status": "={{ $json.status }}",
+            "Received Date": "={{ $json.headers.date.toDateTime().format('yyyy-MM-dd') }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "Client Name",
+              "displayName": "Client Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Contact Person",
+              "displayName": "Contact Person",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Email",
+              "displayName": "Email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Project",
+              "displayName": "Project",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Received Documents",
+              "displayName": "Received Documents",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing Documents",
+              "displayName": "Missing Documents",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Received Date",
+              "displayName": "Received Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1056,
+        80
+      ],
+      "id": "724f24bf-d73b-4957-aef3-4e8c4bf59bf1",
+      "name": "Append row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "3iPmu8KBu3h1cEVZ",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "mishaihtisham22@gmail.com",
+        "subject": "=Missing Client Documents - {{ $json['Client Name'] }}",
+        "emailType": "text",
+        "message": "=Hello Operations Team,  The following client submission is incomplete.  Client: {{ $json['Client Name'] }} Contact Person: {{ $json['Contact Person'] }} Email: {{ $json.Email }} Project: {{ $json.Project }}  Received Documents: {{ $json['Received Documents'] }} Missing Documents: {{ $json['Missing Documents'] }}  Status: {{ $json.Status }} Please follow up with the client for the missing documents.  Regards, Client Document Management Automation",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        80
+      ],
+      "id": "947b1210-b1d3-4fc6-9bb4-a583b9067ade",
+      "name": "Send a message1",
+      "webhookId": "332a1cd6-3b33-4d64-831b-079dafdcf2c4",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "meZd5qj9XNc1XpLh",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $('Append row in sheet1').item.json.Email }}",
+        "subject": "=Action Required - Missing Documents for {{ $('Append row in sheet1').item.json.Project }}",
+        "emailType": "text",
+        "message": "=Hello {{ $('Append row in sheet1').item.json['Contact Person'] }},  Thank you for sending your documents for the {{ $('Append row in sheet1').item.json.Project }} project.  We have received the following documents: {{ $('Append row in sheet1').item.json['Received Documents'] }}  However, the following required document(s) are still missing:  {{ $('Append row in sheet1').item.json['Missing Documents'] }} Please send the missing document(s) by replying to this email so we can complete your document verification.  Thank you.  Best regards, Client Operations Team",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1440,
+        80
+      ],
+      "id": "fc3a76b3-311b-4ed2-b004-e1155184cfab",
+      "name": "Send a message2",
+      "webhookId": "0a477ff6-e602-4d3d-bd7b-130c90ad4b22",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "meZd5qj9XNc1XpLh",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Create folder",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create folder": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Upload file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upload file": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message1": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "2v6QEEPT8VqlayOt",
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": false
+  },
+  "versionId": "ea53b0fe-0410-4e0b-ace3-d4f0a33f9fe8",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a94d7a07e36e17bae9537595345e7dbbe1de508c361591f62ad0548bb3a8c675"
+  },
+  "nodeGroups": [],
+  "id": "1MMPq2TXqrSWoZ7m",
+  "tags": []
+}
